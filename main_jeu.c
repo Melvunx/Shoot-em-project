@@ -4,6 +4,7 @@
 #include<conio.h>
 
 #include"Canon.h"
+#include "Canard.h"
 #include"Affichage.h"
 
 enum evenement {CONTINUE, ECHAP};
@@ -30,18 +31,23 @@ int main(int argv, char **argc){
 void Jeu_Tir(int tailleL, int tailleH, int nivdiff){
 
   int ch;
+  char *nomfic;
   enum evenement res;
   
   /* Pas d'initialisation nécessaire avec conio */
 
   res = CONTINUE;
   
-  Affichage *A = Affichage_initialiser(tailleL, tailleH);  
+  Affichage *A = Affichage_initialiser(tailleL, tailleH);
+  Liste_Canard *Lcanard = Liste_Canard_initialiser_vide(tailleL, tailleH, nivdiff, nomfic);
   Canon *C = Canon_initialiser(0, tailleL, tailleH);
   enum action_canon actC;
 
   /* Boucle événementielle du jeu */ 
   do{
+
+    // Ajout canard
+    ajouter_canard(Lcanard);
 
     /* Remplace halfdelay(1) + getch() de ncurses */
     if (_kbhit()){   /* Si une touche est disponible */
@@ -75,6 +81,7 @@ void Jeu_Tir(int tailleL, int tailleH, int nivdiff){
 
         if (res != ECHAP){
             Canon_action(C, actC);
+            Canard_action(Lcanard);
         }
 
     } else {
@@ -99,6 +106,7 @@ void Jeu_Tir(int tailleL, int tailleH, int nivdiff){
 
   /* Pas de endwin() avec conio */
 
-  Affichage_desallouer(&A);  
+  Affichage_desallouer(&A);
+  Canard_desallouer(&Lcanard);
   Canon_desallouer(&C);
 }

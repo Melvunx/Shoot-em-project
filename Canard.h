@@ -17,13 +17,17 @@ typedef struct {
     int largeur, hauteur;     // hauteur et largeur du canard (taille)
     int coord_apparition ,coord_disparition;    // coordonnée d'apparition et de disparition
     int pas;                  // pas de déplacement
-    int nb_max_canards;           // nombre de canards dans la liste
+    int nb_canards, nb_max_canards;           // nombre de canards dans la liste
 } Liste_Canard;
 
-Canard* initialiser_canard(int coord, enum Direction d); 
+Canard* initialiser_canard(int hauteur);
 
 Liste_Canard* Liste_Canard_initialiser_vide(int largeur_aff, int hauteur_aff,int nivdiff, char * nomfic);
 
 void Canard_desallouer(Liste_Canard** Lcanard);
+
+void ajouter_canard(Liste_Canard* Lcanard);
+
+void Canard_action(Liste_Canard *Lcanard);
 
 #endif
