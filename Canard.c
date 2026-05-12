@@ -23,6 +23,7 @@ Liste_Canard* Liste_Canard_initialiser_vide(int largeur_aff, int hauteur_aff,int
   Lcanard->hauteur = hauteur_aff;
   Lcanard->largeur = largeur_aff;
   Lcanard->nb_max_canards = nivdiff;
+  strcpy(Lcanard->apparence, "🦆");
   Lcanard->nb_canards = 0;
   Lcanard->pas = 1;
 

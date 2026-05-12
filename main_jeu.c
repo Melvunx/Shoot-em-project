@@ -2,14 +2,22 @@
 #include<stdlib.h>
 #include<time.h>
 #include<conio.h>
+#include<windows.h>
 
 #include"Canon.h"
-#include "Canard.h"
 #include"Affichage.h"
+#include"Flechette.h"
+#include"Canard.h"
 
 enum evenement {CONTINUE, ECHAP};
 
 void Jeu_Tir(int tailleL, int tailleH, int nivdiff);
+
+/* Codes de touches spéciales avec conio (getch() retourne 0 ou 224, puis le code) */
+#define KEY_LEFT  75
+#define KEY_RIGHT 77
+#define KEY_ESC   27
+#define KEY_SPACE 32
 
 /***************************************/
 
@@ -28,85 +36,102 @@ int main(int argv, char **argc){
 
 /***************************************/
 
+/* Fonction pour positionner le curseur (remplace ncurses) */
+void gotoxy(int x, int y){
+    COORD coord;
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+/* Efface la console Windows */
+void clearScreen(){
+    system("cls");
+}
+
+/***************************************/
+
 void Jeu_Tir(int tailleL, int tailleH, int nivdiff){
 
   int ch;
-  char *nomfic;
+  char *nomFic = "Hello";
   enum evenement res;
-  
-  /* Pas d'initialisation nécessaire avec conio */
+  enum action_canon actC;
+  int besoin_redessiner = 1;  // 1 = on dessine au moins une fois au début
+
+  HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+  CONSOLE_CURSOR_INFO cursorInfo;
+  GetConsoleCursorInfo(hConsole, &cursorInfo);
+  cursorInfo.bVisible = FALSE;
+  SetConsoleCursorInfo(hConsole, &cursorInfo);
 
   res = CONTINUE;
-  
+
   Affichage *A = Affichage_initialiser(tailleL, tailleH);
-  Liste_Canard *Lcanard = Liste_Canard_initialiser_vide(tailleL, tailleH, nivdiff, nomfic);
   Canon *C = Canon_initialiser(0, tailleL, tailleH);
-  enum action_canon actC;
+  Liste_Canard *LC = Liste_Canard_initialiser_vide(tailleL, tailleH, nivdiff, nomFic);
+  Liste_Flechette *LF = Liste_Flechette_initialiser_vide(tailleL, tailleH);
 
-  /* Boucle événementielle du jeu */ 
-  do{
 
-    // Ajout canard
-    ajouter_canard(Lcanard);
+  do {
 
-    /* Remplace halfdelay(1) + getch() de ncurses */
-    if (_kbhit()){   /* Si une touche est disponible */
+    ch = -1;
+    if (_kbhit()){
         ch = _getch();
-
-        /* Les touches spéciales (flèches) envoient d'abord 0 ou 224 */
         if (ch == 0 || ch == 224){
-            ch = _getch();  /* 2ème appel pour récupérer la vraie touche */
-            switch(ch){
-                case 75:  /* Flèche gauche */
-                    actC = Gauche_canon;
-                    break;
-                case 77:  /* Flèche droite */
-                    actC = Droite_canon;
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            switch(ch){
-                case 27:  /* ESC */
-                    res = ECHAP;
-                    break;
-                case 32:  /* ESPACE */
-                    actC = Tir;
-                    break;
-                default:
-                    break;
-            }
+            ch = _getch();
         }
-
-        if (res != ECHAP){
-            Canon_action(C, actC);
-            Canard_action(Lcanard);
-        }
-
-    } else {
-        ch = -1;  /* Aucune touche appuyée */
     }
 
-    Affichage_vider(A);
-    Affichage_cadre(A);
-    Canon_afficher(C, A);
-    Affichage_dessiner(A);
-    printf("Pour jouer: utiliser les flèches, SPACE pour tirer (ESC pour Sortir)\33[1E\33[1E");
-    fflush(stdout);
+    /* On traite l'entrée clavier */
+    if (ch != -1){
+      switch(ch){
+        case KEY_ESC:   res = ECHAP;        break;
+        case KEY_LEFT:  actC = Gauche_canon; besoin_redessiner = 1; break;
+        case KEY_RIGHT: actC = Droite_canon; besoin_redessiner = 1; break;
+        case KEY_SPACE: actC = Tir;          besoin_redessiner = 1; break;
+        default: break;
+      }
+
+      if (res != ECHAP){
+        Canon_action(C, actC);
+        Canard_action(LC);
+      }
+    }
+
+    // Ici : actions automatiques (canards, fléchettes...)
+    // Si vous en avez, mettez besoin_redessiner = 1; après chaque mouvement
+    ajouter_canard(LC);
+    besoin_redessiner = 1;
+
+    /* On ne redessine QUE si nécessaire */
+    if (besoin_redessiner){
+      gotoxy(0, 0);
+      Affichage_vider(A);
+      Affichage_cadre(A);
+      Canon_afficher(C, A);
+      Affichage_dessiner(A);
+      printf("Pour jouer: utiliser les fleches, SPACE pour tirer (ESC pour Sortir)\n\n");
+      fflush(stdout);
+      besoin_redessiner = 0;  // On remet à 0 jusqu'au prochain changement
+    }
+
+    Sleep(100);
 
   } while (res == CONTINUE);
-  
+
+
+  cursorInfo.bVisible = TRUE;
+  SetConsoleCursorInfo(hConsole, &cursorInfo);
+
   if (res == ECHAP)
-      printf("\n\nVous avez taper ESC pour sortir. \33[1E\n");
+      printf("\n\nVous avez tape ESC pour sortir.\n\n");
 
-  printf("\33[1EAppuyez sur une touche pour sortir\33[1E\n");
-  while(!_kbhit());  /* Attend n'importe quelle touche */
-  _getch();
-
-  /* Pas de endwin() avec conio */
+  printf("Appuyez sur une touche pour sortir\n");
+  while(!_kbhit());
 
   Affichage_desallouer(&A);
-  Canard_desallouer(&Lcanard);
   Canon_desallouer(&C);
+  Flechette_desallouer(&LF);
+  Canard_desallouer(&LC);
 }

@@ -15,6 +15,7 @@ typedef struct Mail_Canard {
 typedef struct {
     Canard *tete;             // tête de la liste chaînée
     int largeur, hauteur;     // hauteur et largeur du canard (taille)
+    char apparence[5];
     int coord_apparition ,coord_disparition;    // coordonnée d'apparition et de disparition
     int pas;                  // pas de déplacement
     int nb_canards, nb_max_canards;           // nombre de canards dans la liste
