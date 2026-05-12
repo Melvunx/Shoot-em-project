@@ -1,6 +1,6 @@
 all: main_jeu
 
-Affichage.o: Affichage.c Affichage.h 
+Affichage.o: Affichage.c Affichage.h
 	gcc -c -Wall Affichage.c
 
 Canon.o: Canon.c Canon.h
@@ -12,14 +12,14 @@ Canard.o: Canard.c Canard.h
 Flechette.o: Flechette.c Flechette.h
 	gcc -c -Wall Flechette.c
 
-main_jeu.o: main_jeu.c Affichage.h 
+main_jeu.o: main_jeu.c Affichage.h
 	gcc -c -Wall main_jeu.c
 
 main_jeu_w: main_jeu.o Affichage.o Canon.o Canard.o Flechette.o
 	gcc -o main_jeu.exe main_jeu.o Affichage.o Canon.o Canard.o Flechette.o
 
 main_jeu: main_jeu.o Affichage.o Canon.o Canard.o Flechette.o
-	gcc -o main_jeu.exe main_jeu.o Affichage.o Canon.o Canard.o Flechette.o -lncurses
+	gcc -o main_jeu main_jeu.o Affichage.o Canon.o Canard.o Flechette.o -lncurses
 
 clean:
 	rm -fr *~ *.o main_jeu
@@ -28,7 +28,13 @@ cleanW:
 	del /f /q *.o main_jeu.exe 2>nul
 
 run: main_jeu
-	./main_jeu.exe
+	./main_jeu
 
 run_easy: main_jeu
-	./main_jeu.exe 50 50 1
+	./main_jeu 50 50 1
+
+run_mid: main_jeu
+	./main_jeu 50 50 4
+
+run_hard: main_jeu
+	./main_jeu 75 75 8
