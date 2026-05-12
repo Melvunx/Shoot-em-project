@@ -1,6 +1,8 @@
 #ifndef _CANARD_H_
 #define _CANARD_H_
 
+#include "Affichage.h"
+
 enum Direction {
   DROITE,
   GAUCHE
@@ -8,6 +10,7 @@ enum Direction {
 
 typedef struct Mail_Canard {
     int x;                       // coordonnée horizontale du coin haut-gauche
+    int y;                       // coordonnée verctical
     enum Direction direction;    // direction du canard
     struct Mail_Canard *suivant; // maillon suivant
 } Canard;
@@ -21,7 +24,7 @@ typedef struct {
     int nb_canards, nb_max_canards;           // nombre de canards dans la liste
 } Liste_Canard;
 
-Canard* initialiser_canard(int hauteur);
+Canard* initialiser_canard(int largeur_aff, int hauteur_aff);
 
 Liste_Canard* Liste_Canard_initialiser_vide(int largeur_aff, int hauteur_aff,int nivdiff, char * nomfic);
 
