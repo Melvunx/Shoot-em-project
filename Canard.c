@@ -4,29 +4,39 @@
 #include "Canard.h"
 #include "Affichage.h"
 
-Canard* initialiser_canard(int hauteur)
+#define MARGE 4
+
+Canard* initialiser_canard(int largeur_aff, int hauteur_aff)
 {
   Canard* c = malloc(sizeof(Canard));
-  c->x = rand() % hauteur;
-  c->direction = rand() % 2; // 0 pour Droite et 1 pour Gauche
+  if (c == NULL) return NULL;
+
+  c->direction = rand() % 2;
+  c->y = 1 + rand() % (hauteur_aff - MARGE);
+
+  if (c->direction == DROITE)
+      c->x = 1;                        // apparaît à gauche, va vers la droite
+  else
+      c->x = largeur_aff - MARGE;          // apparaît à droite, va vers la gauche
+
   c->suivant = NULL;
-
   return c;
-} 
-
-Liste_Canard* Liste_Canard_initialiser_vide(int largeur_aff, int hauteur_aff,int nivdiff, char * nomfic)
+}
+Liste_Canard* Liste_Canard_initialiser_vide(int largeur_aff, int hauteur_aff, int nivdiff, char *nomfic)
 {
   Liste_Canard* Lcanard = malloc(sizeof(Liste_Canard));
   if (Lcanard == NULL) return NULL;
-  
 
   Lcanard->tete = NULL;
-  Lcanard->hauteur = hauteur_aff;
-  Lcanard->largeur = largeur_aff;
+  Lcanard->hauteur = 2;           // hauteur visuelle du canard en cases
+  Lcanard->largeur = 3;           // largeur visuelle du canard en cases
   Lcanard->nb_max_canards = nivdiff;
-  strcpy(Lcanard->apparence, "🦆");
   Lcanard->nb_canards = 0;
   Lcanard->pas = 1;
+  strcpy(Lcanard->apparence, "🦆");
+
+  Lcanard->coord_apparition  = 1;              // ligne où apparaissent les canards
+  Lcanard->coord_disparition = hauteur_aff - 1; // colonne de sortie à droite
 
   return Lcanard;
 }
@@ -51,7 +61,9 @@ void ajouter_canard(Liste_Canard* Lcanard)
 {
   if (Lcanard->nb_max_canards == Lcanard->nb_canards) return;
   
-  Canard* nouv = initialiser_canard(Lcanard->hauteur);
+  Canard* nouv = initialiser_canard(Lcanard->largeur, Lcanard->hauteur);
+  if (nouv == NULL) return;
+
   nouv->suivant = Lcanard->tete;
   Lcanard->tete = nouv;
 
@@ -63,48 +75,35 @@ void Canard_afficher(Liste_Canard *Lcanard, Affichage *A) {
 
     while (canard_courant != NULL) {
 
-        int x = canard_courant->x;   // ligne du canard (coordonnée verticale)
-        int y_centre;                 // colonne du centre du canard
+        int col   = canard_courant->x;
+        int ligne = canard_courant->y;
 
-        // Le canard se déplace sur l'axe horizontal (y),
-        // mais seul x est stocké dans le maillon...
-        // On suppose que y est calculé depuis x selon la direction,
-        // OU que x représente en fait la colonne (y dans la grille).
-        // → Ici on traite x comme la colonne (ypos), la ligne étant fixe.
-        // Adaptez selon votre logique de déplacement.
-
-        int col = x;                        // colonne (position horizontale)
-        int ligne = Lcanard->coord_apparition;   // ligne fixe des canards
-
-        y_centre = col + Lcanard->largeur / 2;
-
-        // Corps du canard (rectangle de base)
+        // Corps
         for (int l = ligne; l < ligne + Lcanard->hauteur; l++)
             for (int c = col; c < col + Lcanard->largeur; c++)
-                strcpy(A->tab[l][c], "\33[42m ");  // vert pour le canard
+                if (l >= 0 && l < A->H && c >= 0 && c < A->L)
+                    strcpy(A->tab[l][c], "\33[42m ");
 
-        // Tête du canard (au-dessus du corps, côté direction)
+        // Tête et bec selon la direction
         if (canard_courant->direction == DROITE) {
-            // Tête à droite
-            strcpy(A->tab[ligne - 1][col + Lcanard->largeur - 1], "\33[42m ");
-            strcpy(A->tab[ligne - 1][col + Lcanard->largeur],     "\33[42m ");
+            int c1 = col + Lcanard->largeur - 1;
+            int c2 = col + Lcanard->largeur;
+            int cb = col + Lcanard->largeur + 1;
+            if (ligne-1 >= 0 && c1 < A->L) strcpy(A->tab[ligne-1][c1], "\33[42m ");
+            if (ligne-1 >= 0 && c2 < A->L) strcpy(A->tab[ligne-1][c2], "\33[42m ");
+            if (ligne-1 >= 0 && cb < A->L) strcpy(A->tab[ligne-1][cb], "\33[43m ");
         } else {
-            // Tête à gauche
-            strcpy(A->tab[ligne - 1][col],     "\33[42m ");
-            strcpy(A->tab[ligne - 1][col - 1], "\33[42m ");
-        }
-
-        // Bec du canard (1 case encore plus à droite ou gauche)
-        if (canard_courant->direction == DROITE) {
-            strcpy(A->tab[ligne - 1][col + Lcanard->largeur + 1], "\33[43m "); // jaune = bec
-        } else {
-            strcpy(A->tab[ligne - 1][col - 2], "\33[43m ");               // jaune = bec
+            int c1 = col;
+            int c2 = col - 1;
+            int cb = col - 2;
+            if (ligne-1 >= 0 && c1 >= 0) strcpy(A->tab[ligne-1][c1], "\33[42m ");
+            if (ligne-1 >= 0 && c2 >= 0) strcpy(A->tab[ligne-1][c2], "\33[42m ");
+            if (ligne-1 >= 0 && cb >= 0) strcpy(A->tab[ligne-1][cb], "\33[43m ");
         }
 
         canard_courant = canard_courant->suivant;
     }
 }
-
 
 void Canard_action(Liste_Canard *Lcanard) {
   if (Lcanard == NULL || Lcanard->tete == NULL) return;
@@ -113,27 +112,24 @@ void Canard_action(Liste_Canard *Lcanard) {
   Canard *precedent = NULL;
 
   while (courant != NULL) {
-  
-    // Faire avancer le canard d'un pas selon sa direction
-      if (courant->direction == DROITE) courant->x += Lcanard->pas;
-      else courant->x -= Lcanard->pas;
-      
-      // Vérifier si le canard a atteint un bord
-      if (courant->x >= Lcanard->coord_disparition || courant->x <= Lcanard->coord_apparition) 
-      {
-        // Supprimer le maillon
-        Canard *a_supprimer = courant;
-        if (precedent == NULL)          // c'était la tête
-            Lcanard->tete = courant->suivant;
-        else            // c'était un maillon du milieu/fin
-            precedent->suivant = courant->suivant;
 
-        courant = courant->suivant;
-        free(a_supprimer);
-        Lcanard->nb_max_canards--;      // mettre à jour le compteur
-      } else {
-          precedent = courant;
-          courant = courant->suivant;
-      }
+    if (courant->direction == DROITE) courant->x += Lcanard->pas;
+    else                              courant->x -= Lcanard->pas;
+
+    // Sorti par la droite ou par la gauche
+    int sorti = (courant->x >= Lcanard->coord_disparition || courant->x <= 0);
+
+    if (sorti) {
+      Canard *a_supprimer = courant;
+      if (precedent == NULL) Lcanard->tete = courant->suivant;
+      else                   precedent->suivant = courant->suivant;
+
+      courant = courant->suivant;
+      free(a_supprimer);
+      Lcanard->nb_canards--;   // ← nb_canards et non nb_max_canards
+    } else {
+      precedent = courant;
+      courant = courant->suivant;
+    }
   }
 }
