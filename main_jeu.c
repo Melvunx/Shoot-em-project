@@ -80,7 +80,7 @@ void Jeu_Tir(int tailleL, int tailleH, int nivdiff){
     printf("Pour jouer: utiliser les flèches, SPACE pour tirer (ESC pour Sortir)\33[1E\33[1E");
     fflush(stdout);  /* Force l'affichage complet	 */
 
-    ajouter_canard(LC);
+
       
     if ( ch!=-1 ){ /* Si une touche a été appuyée */
 
@@ -104,11 +104,12 @@ void Jeu_Tir(int tailleL, int tailleH, int nivdiff){
        if (res!=ECHAP){
 	 // Zone des actions dirigeant un élément
           Canon_action(C, actC);
-          Canard_action(LC);
+
        }
            
      }
-     
+      Canard_action(LC);
+     ajouter_canard(LC);
      // Zone des actions d'éléments agissant automatiquement
      // Comme les fléchettes et les canards
   } while (res== CONTINUE);
