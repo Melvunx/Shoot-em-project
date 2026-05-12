@@ -18,7 +18,7 @@ Liste_Flechette* Liste_Flechette_initialiser_vide(int hauteur_aff, int nivdiff){
     F->hauteur = 1;
 
     // apparence
-    strcpy(F->apparence, "\33[31m||");
+    strcpy(F->apparence, "\33[31m|");
 
     // départ bas écran
     F->y_depart = hauteur_aff - 2;
