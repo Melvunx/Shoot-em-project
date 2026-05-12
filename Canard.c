@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include<string.h>
 #include "Canard.h"
+#include "Affichage.h"
 
 Canard* initialiser_canard(int hauteur)
 {
@@ -56,6 +57,54 @@ void ajouter_canard(Liste_Canard* Lcanard)
 
   Lcanard->nb_canards++;
 }
+
+void Canard_afficher(Liste_Canard *Lcanard, Affichage *A) {
+    Canard *canard_courant = Lcanard->tete;
+
+    while (canard_courant != NULL) {
+
+        int x = canard_courant->x;   // ligne du canard (coordonnée verticale)
+        int y_centre;                 // colonne du centre du canard
+
+        // Le canard se déplace sur l'axe horizontal (y),
+        // mais seul x est stocké dans le maillon...
+        // On suppose que y est calculé depuis x selon la direction,
+        // OU que x représente en fait la colonne (y dans la grille).
+        // → Ici on traite x comme la colonne (ypos), la ligne étant fixe.
+        // Adaptez selon votre logique de déplacement.
+
+        int col = x;                        // colonne (position horizontale)
+        int ligne = Lcanard->coord_apparition;   // ligne fixe des canards
+
+        y_centre = col + Lcanard->largeur / 2;
+
+        // Corps du canard (rectangle de base)
+        for (int l = ligne; l < ligne + Lcanard->hauteur; l++)
+            for (int c = col; c < col + Lcanard->largeur; c++)
+                strcpy(A->tab[l][c], "\33[42m ");  // vert pour le canard
+
+        // Tête du canard (au-dessus du corps, côté direction)
+        if (canard_courant->direction == DROITE) {
+            // Tête à droite
+            strcpy(A->tab[ligne - 1][col + Lcanard->largeur - 1], "\33[42m ");
+            strcpy(A->tab[ligne - 1][col + Lcanard->largeur],     "\33[42m ");
+        } else {
+            // Tête à gauche
+            strcpy(A->tab[ligne - 1][col],     "\33[42m ");
+            strcpy(A->tab[ligne - 1][col - 1], "\33[42m ");
+        }
+
+        // Bec du canard (1 case encore plus à droite ou gauche)
+        if (canard_courant->direction == DROITE) {
+            strcpy(A->tab[ligne - 1][col + Lcanard->largeur + 1], "\33[43m "); // jaune = bec
+        } else {
+            strcpy(A->tab[ligne - 1][col - 2], "\33[43m ");               // jaune = bec
+        }
+
+        canard_courant = canard_courant->suivant;
+    }
+}
+
 
 void Canard_action(Liste_Canard *Lcanard) {
   if (Lcanard == NULL || Lcanard->tete == NULL) return;

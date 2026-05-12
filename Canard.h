@@ -29,6 +29,8 @@ void Canard_desallouer(Liste_Canard** Lcanard);
 
 void ajouter_canard(Liste_Canard* Lcanard);
 
+void Canard_afficher(Liste_Canard *Lcanard, Affichage *A);
+
 void Canard_action(Liste_Canard *Lcanard);
 
 #endif
