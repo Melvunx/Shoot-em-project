@@ -15,8 +15,11 @@ Flechette.o: Flechette.c Flechette.h
 main_jeu.o: main_jeu.c Affichage.h 
 	gcc -c -Wall main_jeu.c
 
-main_jeu: main_jeu.o Affichage.o Canon.o Canard.o Flechette.o
+main_jeu_w: main_jeu.o Affichage.o Canon.o Canard.o Flechette.o
 	gcc -o main_jeu.exe main_jeu.o Affichage.o Canon.o Canard.o Flechette.o
+
+main_jeu: main_jeu.o Affichage.o Canon.o Canard.o Flechette.o
+	gcc -o main_jeu.exe main_jeu.o Affichage.o Canon.o Canard.o Flechette.o -lncurses
 
 clean:
 	rm -fr *~ *.o main_jeu
