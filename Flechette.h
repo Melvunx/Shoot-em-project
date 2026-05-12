@@ -1,11 +1,12 @@
 #ifndef FLECHETTE_H
 #define FLECHETTE_H
+#include "Affichage.h"
 
 // ===== Struct d'une fléchette (maillon) =====
-typedef struct Mail_Flechette {
+typedef struct Flechette {
     int x;                  // coordonnée verticale (ligne)
     int y;                  // coordonnée horizontale (colonne)
-    struct Mail_Flechette* suivant;
+    struct Flechette* suivant;
 } Flechette;
 
 // ===== Struct liste de fléchettes =====
@@ -14,21 +15,25 @@ typedef struct {
     Flechette* tete;
 
     // informations sur l'affichage
-    int largeur, hauteur;
-    char apparence[5];      // ASCII / ANSI / emoji
+    int largeur;
+    int hauteur;
+    char apparence[5];
 
     // limites verticales
     int y_depart;           // position de départ (bas écran)
     int y_max;              // limite haute
 
-    // gestion quantité (optionnel mais recommandé)
+    // gestion quantité
     int nb_flechettes;
     int nb_max;
 
 } Liste_Flechette;
 
 Liste_Flechette* Liste_Flechette_initialiser_vide(int hauteur_aff, int nivdiff);
-
 void Flechette_desallouer(Liste_Flechette** Lflech);
+void ajouter_flechette(Liste_Flechette* Lflech, int y);
+void Flechette_action(Liste_Flechette* Lflech);
+void Flechette_afficher(Liste_Flechette* Lflech, Affichage* A);
+
 
 #endif
