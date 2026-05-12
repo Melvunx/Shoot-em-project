@@ -3,7 +3,7 @@
 
 #include"Affichage.h"
 
-enum action_canon {Rien, Gauche_canon, Droite_canon, Tir};
+enum action_canon {Gauche_canon, Droite_canon, Tir};
 
 typedef struct{
   int largeur, hauteur;   /* Taille du rectangle de la base du canon */
