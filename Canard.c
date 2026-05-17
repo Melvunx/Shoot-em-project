@@ -22,21 +22,22 @@ Canard* initialiser_canard(int largeur_aff, int hauteur_aff)
   c->suivant = NULL;
   return c;
 }
-Liste_Canard* Liste_Canard_initialiser_vide(int largeur_aff, int hauteur_aff, int nivdiff, char *nomfic)
+
+Liste_Canard* Liste_Canard_initialiser_vide(int largeur_aff, int hauteur_aff, int nivdiff)
 {
   Liste_Canard* Lcanard = malloc(sizeof(Liste_Canard));
   if (Lcanard == NULL) return NULL;
 
   Lcanard->tete = NULL;
-  Lcanard->hauteur = 2;           // hauteur visuelle du canard en cases
-  Lcanard->largeur = 3;           // largeur visuelle du canard en cases
+  Lcanard->hauteur = 2;
+  Lcanard->largeur = 3;
+  Lcanard->largeur_aff = largeur_aff;
+  Lcanard->hauteur_aff = hauteur_aff;
   Lcanard->nb_max_canards = nivdiff;
   Lcanard->nb_canards = 0;
   Lcanard->pas = 1;
-  strcpy(Lcanard->apparence, "🦆");
-
-  Lcanard->coord_apparition  = 1;              // ligne où apparaissent les canards
-  Lcanard->coord_disparition = hauteur_aff - 1; // colonne de sortie à droite
+  Lcanard->coord_apparition  = 1;
+  Lcanard->coord_disparition = largeur_aff - 1;
 
   return Lcanard;
 }
@@ -59,14 +60,13 @@ void Canard_desallouer(Liste_Canard** Lcanard)
 
 void ajouter_canard(Liste_Canard* Lcanard)
 {
-  if (Lcanard->nb_max_canards == Lcanard->nb_canards) return;
-  
-  Canard* nouv = initialiser_canard(Lcanard->largeur, Lcanard->hauteur);
+  if (Lcanard->nb_canards >= Lcanard->nb_max_canards) return;
+
+  Canard* nouv = initialiser_canard(Lcanard->largeur_aff, Lcanard->hauteur_aff);
   if (nouv == NULL) return;
 
   nouv->suivant = Lcanard->tete;
   Lcanard->tete = nouv;
-
   Lcanard->nb_canards++;
 }
 
