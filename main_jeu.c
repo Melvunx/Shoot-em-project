@@ -1,134 +1,81 @@
-   #include<stdio.h>
-   #include<stdlib.h>
-   #include<time.h>
-   #include<ncurses.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+#include<ncurses.h>
 
-   #include"Canon.h"
-   #include"Affichage.h"
-   #include"Flechette.h"
-   #include"Canard.h"
+#include"Canon.h"
+#include"Affichage.h"
+#include"Flechette.h"
+#include"Canard.h"
 
-   // Liste des évènements possibles
-   enum evenement {CONTINUE, ECHAP};
-      // CONTINUE: le jeu debute ou continue
-      // ECHAP: la touche ESC a été utilisée
-      // (on peut en ajouter d'autres (victoire etc)
+enum evenement {CONTINUE, ECHAP};
 
-   /* Coeur du jeu contenant la boucle événementielle */
-   void Jeu_Tir(int tailleL, int tailleH, int nivdiff);
+int victoire(Liste_Canard *LC)
+{
+    return LC->tete == NULL;
+}
 
+void Jeu_Tir(int L, int H, int nivdiff);
 
-   /***************************************/
+int main(int argc, char **argv)
+{
+    if (argc!=4){
+        printf("Usage: %s L H niv\n", argv[0]);
+        exit(1);
+    }
 
+    srand(time(NULL));
+    Jeu_Tir(atoi(argv[1]),atoi(argv[2]),atoi(argv[3]));
+}
 
-   int main(int argv, char **argc){
+void Jeu_Tir(int L,int H,int nivdiff)
+{
+    int ch;
+    enum evenement res=CONTINUE;
 
-   if (argv!=4){
-      printf("Usage: %s <largeur> <hauteur> <niveau de difficulté>\n",argc[0]);
-      exit(2);
-   }
-   srand(time(NULL));
+    initscr();
+    raw();
+    keypad(stdscr,TRUE);
+    noecho();
+    halfdelay(1);
 
-   Jeu_Tir(atoi(argc[1]), atoi(argc[2]), atoi(argc[3]));
+    Affichage *A=Affichage_initialiser(L,H);
+    Canon *C=Canon_initialiser(0,L,H);
+    Liste_Canard *LC=Liste_Canard_initialiser_vide(L,H,nivdiff);
+    Liste_Flechette *LF=Liste_Flechette_initialiser_vide(H,nivdiff);
 
-   return EXIT_SUCCESS;
-   }
+    enum action_canon actC;
 
+    do{
+        ch=getch();
 
-   /***************************************/
+        Affichage_vider(A);
+        Affichage_cadre(A);
 
+        Canon_afficher(C,A);
+        Canard_afficher(LC,A);
+        Flechette_afficher(LF,A);
 
-   void Jeu_Tir(int tailleL, int tailleH, int nivdiff){
+        Affichage_dessiner(A);
 
-   int ch;   /* Récupération de la saisie clavier, valeur # pour fin de jeu */
-   enum evenement res; /* Retour des évènements  */
+        if (ch==27) res=ECHAP;
+        if (ch==KEY_LEFT) Canon_action(C,Gauche_canon);
+        if (ch==KEY_RIGHT) Canon_action(C,Droite_canon);
+        if (ch==32) ajouter_flechette(LF,C->ypos);
 
-   /* Initialisation de ncurses et du clavier(4*/
-   initscr();
-   raw();
-   keypad(stdscr, TRUE);
-   noecho();
-   halfdelay(1);  /* Temps d'exécution max de getch à 1/10ème de seconde */
+        Flechette_action(LF);
+        Canard_action(LC);
+        Interaction_Flechette_Canard(LF,LC);
+        ajouter_canard(LC);
 
-   /* Initialisation des éléments du jeu */
+    } while(res==CONTINUE && !victoire(LC));
 
-   res= CONTINUE;
+    endwin();
 
-   Affichage *A=Affichage_initialiser(tailleL, tailleH);
+    if (victoire(LC)) printf("\nVICTOIRE\n");
 
-   Canon *C = Canon_initialiser(0, tailleL, tailleH);
-      Liste_Canard *LC = Liste_Canard_initialiser_vide(tailleL, tailleH, nivdiff);
-      Liste_Flechette *LF = Liste_Flechette_initialiser_vide(tailleL, tailleH);
-   enum action_canon actC;
-
-
-
-
-   /* Boucle événementielle du jeu */
-   do{
-
-      ch = getch(); /* Si aucune touche utilisée, getch renvoie -1 */
-
-      Affichage_vider(A);
-      Affichage_cadre(A);
-      Canon_afficher(C, A);
-      Canard_afficher(LC, A);
-      Flechette_afficher(LF, A);
-
-      // Autre affichage
-      Affichage_dessiner(A);
-      printf("Pour jouer: utiliser les flèches, SPACE pour tirer (ESC pour Sortir)\33[1E\33[1E");
-      fflush(stdout);  /* Force l'affichage complet	 */
-
-
-
-      if ( ch!=-1 ){ /* Si une touche a été appuyée */
-
-      switch(ch) {
-         case 27:  /* Code ASCII de la touche ESC-Echap */
-            res=ECHAP;
-            break;
-         case KEY_LEFT:
-            actC = Gauche_canon;
-            break;
-         case KEY_RIGHT:
-            actC = Droite_canon;
-            break;
-         case 32:  /* Code ASCII de la touche ESPACE */
-            actC = Tir;
-            ajouter_flechette(LF, C->ypos + C->largeur / 2);
-            break;
-         default:
-            break;
-         }
-
-         if (res!=ECHAP){
-      // Zone des actions dirigeant un élément
-            Canon_action(C, actC);
-         }
-
-      }
-      Flechette_action(LF);
-      Canard_action(LC);
-      Interaction_Flechette_Canard(LF, LC);
-      ajouter_canard(LC);
-   } while (res== CONTINUE);
-
-
-   if (res==ECHAP)
-         printf("\n\nVous avez taper ESC pour sortir. \33[1E\n");
-
-   printf("\33[1EAppuyez sur une touche pour sortir\33[1E\n");
-   do{
-         ch = getch();
-   }while(ch==-1);
-
-
-   endwin(); /* Doit obligatoirement etre mis en fin de programme pour remettre le terminal en etat */
-
-   Affichage_desallouer(&A);
-   Canon_desallouer(&C);
-      Flechette_desallouer(&LF);
-   Canard_desallouer(&LC);
-
-   }
+    Affichage_desallouer(&A);
+    Canon_desallouer(&C);
+    Flechette_desallouer(&LF);
+    Canard_desallouer(&LC);
+}
