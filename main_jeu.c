@@ -42,7 +42,6 @@
 
    int ch;   /* Récupération de la saisie clavier, valeur # pour fin de jeu */
    enum evenement res; /* Retour des évènements  */
-   char *nomFic = "Hello";
 
    /* Initialisation de ncurses et du clavier(4*/
    initscr();
@@ -58,7 +57,7 @@
    Affichage *A=Affichage_initialiser(tailleL, tailleH);
 
    Canon *C = Canon_initialiser(0, tailleL, tailleH);
-      Liste_Canard *LC = Liste_Canard_initialiser_vide(tailleL, tailleH, nivdiff, nomFic);
+      Liste_Canard *LC = Liste_Canard_initialiser_vide(tailleL, tailleH, nivdiff);
       Liste_Flechette *LF = Liste_Flechette_initialiser_vide(tailleL, tailleH);
    enum action_canon actC;
 
@@ -109,11 +108,10 @@
          }
 
       }
-      Canard_action(LC);
       Flechette_action(LF);
+      Canard_action(LC);
+      Interaction_Flechette_Canard(LF, LC);
       ajouter_canard(LC);
-      // Zone des actions d'éléments agissant automatiquement
-      // Comme les fléchettes et les canards
    } while (res== CONTINUE);
 
 
