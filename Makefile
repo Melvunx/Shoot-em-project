@@ -37,4 +37,4 @@ run_mid: main_jeu
 	./main_jeu 50 50 4
 
 run_hard: main_jeu
-	./main_jeu 75 75 8
+	./main_jeu 100 50 8
