@@ -1,6 +1,7 @@
 #ifndef FLECHETTE_H
 #define FLECHETTE_H
 #include "Affichage.h"
+#include "Canard.h"
 
 // ===== Struct d'une fléchette (maillon) =====
 typedef struct Flechette {
@@ -34,6 +35,8 @@ void Flechette_desallouer(Liste_Flechette** Lflech);
 void ajouter_flechette(Liste_Flechette* Lflech, int y);
 void Flechette_action(Liste_Flechette* Lflech);
 void Flechette_afficher(Liste_Flechette* Lflech, Affichage* A);
+void Interaction_Flechette_Canard(Liste_Flechette *Lflech, Liste_Canard *Lcanard);
+
 
 
 #endif
