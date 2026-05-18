@@ -6,11 +6,12 @@
 enum action_canon {Gauche_canon, Droite_canon, Tir};
 
 typedef struct{
-  int largeur, hauteur;   /* Taille du rectangle de la base du canon */
-  int pos_min, pos_max;   /* Position min (à gauche) et max (à droite) */
-  int xpos, ypos;         /* Case supérieure gauche de la position du Canon */
-  int pas;                /* Nombre de cases de déplacement d'un Canon à chaque appui */
-  int ypos_old;           /* Position précédente du Canon */
+  int largeur, hauteur;
+  int pos_min, pos_max;
+  int xpos, ypos;
+  int pas;
+  int ypos_old;
+  int pv;
 } Canon;
 
 Canon* Canon_initialiser(int pos_min, int pos_max, int hauteur_aff);
@@ -19,4 +20,5 @@ void Canon_action(Canon *C, enum action_canon actC);
 void Canon_afficher(Canon *C, Affichage* A);
 
 
-#endif
+#endif 
+
