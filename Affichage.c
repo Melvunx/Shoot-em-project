@@ -23,7 +23,7 @@ void Affichage_desallouer(Affichage **A){
   int x,y;
   for (x=0;x<(*A)->H;x++){
     for (y=0;y<(*A)->L;y++)
-       free((*A)->tab[x][y]);    
+       free((*A)->tab[x][y]);
     free((*A)->tab[x]);
      }
   free((*A)->tab);
@@ -43,7 +43,7 @@ void Affichage_vider(Affichage *A){
 
 void Affichage_cadre(Affichage *A){
   int x,y;
-   
+
   /* Cadre */
   for (x=0;x<A->H;x++){
       strcpy(A->tab[x][0],"\33[42m ");
@@ -60,13 +60,13 @@ void Affichage_cadre(Affichage *A){
 /* Affiche une grille dans le terminal */
 void Affichage_dessiner(Affichage *A){
   int x, y;
-  
+
   printf("\33[2J"); /* Efface tout l'ecran */
-  printf("\33[H");  /* Deplace le curseur en position (0,0) */ 
-  
+  printf("\33[H");  /* Deplace le curseur en position (0,0) */
+
   for (x=0;x<A->H;x++){
     for (y=0;y<A->L;y++)  /* Affiche les cases de la grille */
-      printf("%s\033[00m", A->tab[x][y]);          
+      printf("%s\033[00m", A->tab[x][y]);
     printf("\33[1E");     /* Retour à la ligne */
  }
 
@@ -74,4 +74,18 @@ void Affichage_dessiner(Affichage *A){
   printf("\33[1E");
 }
 
+/* Génère une barre de vie colorée dans le tableau d'affichage */
+void afficher_barre_vie(Affichage *A, int ligne, int col, int pv, int pv_max, char *couleur)
+{
+    if (ligne < 0 || ligne >= A->H) return;
+
+    for (int i = 0; i < pv_max; i++) {
+        if (col + i < 0 || col + i >= A->L) break;
+
+        if (i < pv)
+            strcpy(A->tab[ligne][col + i], couleur);   // case pleine
+        else
+            strcpy(A->tab[ligne][col + i], "\33[37m-"); // case vide
+    }
+}
 
