@@ -2,7 +2,7 @@
 #include<stdio.h>
 #include<string.h>
 #include "Canard.h"
-#include "Affichage.h"
+#include "Flechette.h"
 
 #define MARGE 4
 
@@ -13,68 +13,91 @@ Canard* initialiser_canard(int largeur_aff, int hauteur_aff)
 
   c->direction = rand() % 2;
   c->y = 1 + rand() % (hauteur_aff - MARGE);
+  c->pv = 4;
 
   if (c->direction == DROITE)
-      c->x = 1;                        // apparaît à gauche, va vers la droite
+      c->x = 1;
   else
-      c->x = largeur_aff - MARGE;          // apparaît à droite, va vers la gauche
+      c->x = largeur_aff - MARGE;
 
   c->suivant = NULL;
   return c;
 }
 
-Liste_Canard* Liste_Canard_initialiser_vide(int largeur_aff, int hauteur_aff, int nivdiff)
-{
-  Liste_Canard* Lcanard = malloc(sizeof(Liste_Canard));
-  if (Lcanard == NULL) return NULL;
+Liste_Canard* Liste_Canard_initialiser_vide(int largeur_aff, int hauteur_aff, int nivdiff){
+  Liste_Canard* L = malloc(sizeof(Liste_Canard));
 
-  Lcanard->tete = NULL;
-  Lcanard->hauteur = 2;
-  Lcanard->largeur = 3;
-  Lcanard->largeur_aff = largeur_aff;
-  Lcanard->hauteur_aff = hauteur_aff;
-  Lcanard->nb_max_canards = nivdiff;
-  Lcanard->nb_canards = 0;
-  Lcanard->pas = 1;
-  Lcanard->coord_apparition  = 1;
-  Lcanard->coord_disparition = largeur_aff - 1;
+  L->tete = NULL;
+  L->hauteur = 2;
+  L->largeur = 3;
+  L->largeur_aff = largeur_aff;
+  L->hauteur_aff = hauteur_aff;
 
-  return Lcanard;
+  L->nb_max_canards = nivdiff;
+  L->nb_canards = 0;
+  L->nb_tues  = 0;
+  L->nb_total = nivdiff * 2;
+
+  L->pas = 1;
+  L->coord_disparition = largeur_aff - 1;
+
+  return L;
 }
 
-void Canard_desallouer(Liste_Canard** Lcanard)
-{
-  if (Lcanard == NULL || *Lcanard == NULL) return;
-
-  Canard *cour = (*Lcanard)->tete;
-  while (cour != NULL)
-  {
-    Canard *suiv = cour->suivant;
-    free(cour);
-    cour = suiv;
+void Canard_desallouer(Liste_Canard** L){
+  Canard *c = (*L)->tete;
+  while(c){
+    Canard *n = c->suivant;
+    free(c);
+    c = n;
   }
-  
-  free(*Lcanard);
-  *Lcanard = NULL;
+  free(*L);
+  *L = NULL;
 }
 
-void ajouter_canard(Liste_Canard* Lcanard)
+void ajouter_canard(Liste_Canard *Lcanard)
 {
-  if (Lcanard->nb_canards >= Lcanard->nb_max_canards) return;
+    // Ne plus spawner si on a déjà fait apparaître assez de canards
+    if (Lcanard->nb_tues + Lcanard->nb_canards >= Lcanard->nb_total) return;
+    if (Lcanard->nb_canards >= Lcanard->nb_max_canards) return;
 
-  Canard* nouv = initialiser_canard(Lcanard->largeur_aff, Lcanard->hauteur_aff);
-  if (nouv == NULL) return;
+    Canard *nouv = initialiser_canard(Lcanard->largeur_aff, Lcanard->hauteur_aff);
+    if (nouv == NULL) return;
 
-  nouv->suivant = Lcanard->tete;
-  Lcanard->tete = nouv;
-  Lcanard->nb_canards++;
+    nouv->suivant = Lcanard->tete;
+    Lcanard->tete = nouv;
+    Lcanard->nb_canards++;
+}
+
+void Canard_action(Liste_Canard *L){
+  Canard *c = L->tete;
+  Canard *p = NULL;
+
+  while(c){
+    if(c->direction == DROITE) c->x++;
+    else c->x--;
+
+    int sorti = (c->x <= 0 || c->x >= L->coord_disparition);
+
+    if(sorti){
+      Canard *sup = c;
+      if(!p) L->tete = c->suivant;
+      else p->suivant = c->suivant;
+
+      c = c->suivant;
+      free(sup);
+      L->nb_canards--;
+    } else {
+      p = c;
+      c = c->suivant;
+    }
+  }
 }
 
 void Canard_afficher(Liste_Canard *Lcanard, Affichage *A) {
     Canard *canard_courant = Lcanard->tete;
 
     while (canard_courant != NULL) {
-
         int col   = canard_courant->x;
         int ligne = canard_courant->y;
 
@@ -84,7 +107,7 @@ void Canard_afficher(Liste_Canard *Lcanard, Affichage *A) {
                 if (l >= 0 && l < A->H && c >= 0 && c < A->L)
                     strcpy(A->tab[l][c], "\33[42m ");
 
-        // Tête et bec selon la direction
+        // Tête et bec
         if (canard_courant->direction == DROITE) {
             int c1 = col + Lcanard->largeur - 1;
             int c2 = col + Lcanard->largeur;
@@ -101,35 +124,12 @@ void Canard_afficher(Liste_Canard *Lcanard, Affichage *A) {
             if (ligne-1 >= 0 && cb >= 0) strcpy(A->tab[ligne-1][cb], "\33[43m ");
         }
 
+        // Affichage des PV au-dessus du canard
+        char pv_str[16];
+        snprintf(pv_str, sizeof(pv_str), "\33[37m%d", canard_courant->pv);
+        if (ligne-2 >= 0 && col >= 0 && col < A->L)
+            afficher_barre_vie(A, ligne - 2, col, canard_courant->pv, 3, "\33[33m+");  // jaune
+
         canard_courant = canard_courant->suivant;
     }
-}
-
-void Canard_action(Liste_Canard *Lcanard) {
-  if (Lcanard == NULL || Lcanard->tete == NULL) return;
-
-  Canard *courant = Lcanard->tete;
-  Canard *precedent = NULL;
-
-  while (courant != NULL) {
-
-    if (courant->direction == DROITE) courant->x += Lcanard->pas;
-    else                              courant->x -= Lcanard->pas;
-
-    // Sorti par la droite ou par la gauche
-    int sorti = (courant->x >= Lcanard->coord_disparition || courant->x <= 0);
-
-    if (sorti) {
-      Canard *a_supprimer = courant;
-      if (precedent == NULL) Lcanard->tete = courant->suivant;
-      else                   precedent->suivant = courant->suivant;
-
-      courant = courant->suivant;
-      free(a_supprimer);
-      Lcanard->nb_canards--;   // ← nb_canards et non nb_max_canards
-    } else {
-      precedent = courant;
-      courant = courant->suivant;
-    }
-  }
 }
