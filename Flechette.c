@@ -3,34 +3,56 @@
 #include<string.h>
 #include "Flechette.h"
 
-
 Liste_Flechette* Liste_Flechette_initialiser_vide(int hauteur_aff, int nivdiff){
+  Liste_Flechette* F = malloc(sizeof(Liste_Flechette));
 
-    Liste_Flechette *F;
+  F->tete = NULL;
+  F->y_depart = hauteur_aff - 2;
+  F->y_max = 1;
+  F->nb_flechettes = 0;
+  F->nb_max = nivdiff;
 
-    F = malloc(sizeof(Liste_Flechette));
+  strcpy(F->apparence,"|");
+  return F;
+}
 
-    // liste vide
-    F->tete = NULL;
+void ajouter_flechette(Liste_Flechette* F, int y){
+  Flechette* n = malloc(sizeof(Flechette));
+  n->x = F->y_depart;
+  n->y = y;
+  n->suivant = F->tete;
+  F->tete = n;
+}
 
-    // taille fléchette
-    F->largeur = 1;
-    F->hauteur = 1;
+void Flechette_action(Liste_Flechette* F){
+  Flechette *c = F->tete, *p=NULL;
 
-    // apparence
-    strcpy(F->apparence, "\33[31m|");
+  while(c){
+    c->x--;
 
-    // départ bas écran
-    F->y_depart = hauteur_aff - 2;
+    if(c->x <= F->y_max){
+      Flechette *sup = c;
+      if(!p) F->tete = c->suivant;
+      else p->suivant = c->suivant;
 
-    // limite haute
-    F->y_max = 1;
+      c = c->suivant;
+      free(sup);
+    } else {
+      p = c;
+      c = c->suivant;
+    }
+  }
+}
 
-    // gestion quantité
-    F->nb_flechettes = 0;
-    F->nb_max = nivdiff;
+void Flechette_afficher(Liste_Flechette* F, Affichage* A){
+  Flechette *c = F->tete;
 
-    return F;
+  while(c){
+    if(c->x>=0 && c->x<A->H && c->y>=0 && c->y<A->L){
+      strcpy(A->tab[c->x][c->y],"|");
+    }
+    c = c->suivant;
+  }
 }
 
 void Flechette_desallouer(Liste_Flechette** Lflech){
@@ -50,80 +72,55 @@ void Flechette_desallouer(Liste_Flechette** Lflech){
     *Lflech = NULL;
 
 }
-void ajouter_flechette(Liste_Flechette* Lflech, int y){
-    Flechette* nouveauF;
 
-    //vérification du nombre maximum
-    if (Lflech->nb_flechettes >= Lflech-> nb_max){
-        printf("Limite atteinte\n");
-        return;
-    }
+void Interaction_Flechette_Canard(Liste_Flechette *Lflech, Liste_Canard *Lcanard) {
+    if (Lflech == NULL || Lcanard == NULL) return;
 
-    //allocation mémoire
-    nouveauF = malloc(sizeof(Flechette));
+    Flechette *flechette = Lflech->tete;
+    Flechette *prec_f = NULL;
 
-    //position de départ
-    nouveauF->x = Lflech->y_depart;
-    nouveauF->y =y;
+    while (flechette != NULL) {
+        int touche = 0;
 
-    //insertion en têtede liste
-    nouveauF->suivant = Lflech->tete;
+        Canard *canard = Lcanard->tete;
+        Canard *prec_c = NULL;
 
-    Lflech->tete = nouveauF;
+        while (canard != NULL && !touche) {
+            int dans_lignes   = (flechette->x >= canard->y &&
+                                 flechette->x <  canard->y + Lcanard->hauteur);
+            int dans_colonnes = (flechette->y >= canard->x &&
+                                 flechette->y <  canard->x + Lcanard->largeur);
 
-    //mise à jour compteur
-    Lflech->nb_flechettes++;
+            if (dans_lignes && dans_colonnes) {
+                touche = 1;
+                canard->pv -= 2;   // ← dégâts
 
-}
-void Flechette_afficher(Liste_Flechette *Lflech, Affichage* A){
-
-    if (Lflech == NULL) return;
-
-    Flechette *tmp = Lflech->tete;
-
-    while(tmp != NULL){
-
-        if(tmp->x >= 0 && tmp->x < A->H &&
-           tmp->y >= 0 && tmp->y < A->L){
-
-            strcpy(A->tab[tmp->x][tmp->y], Lflech->apparence);
+                if (canard->pv <= 0) {
+                    if (prec_c == NULL) Lcanard->tete = canard->suivant;
+                    else prec_c->suivant = canard->suivant;
+                    free(canard);
+                    Lcanard->nb_canards--;
+                    Lcanard->nb_tues++;
+                } else {
+                    prec_c = canard;
+                }
+            } else {
+                prec_c = canard;
+                canard = canard->suivant;
+            }
         }
 
-        tmp = tmp->suivant;
-    }
-}
-
-void Flechette_action(Liste_Flechette *Lflech){
-
-    if (Lflech == NULL) return;
-
-    Flechette *tmp = Lflech->tete;
-    Flechette *prec = NULL;
-
-    while(tmp != NULL){
-
-        tmp->x--; // montée
-
-        // sortie écran
-        if(tmp->x <= Lflech->y_max){
-
-            Flechette *sup = tmp;
-
-            if(prec == NULL){
-                Lflech->tete = tmp->suivant;
-                tmp = Lflech->tete;
-            }
-            else{
-                prec->suivant = tmp->suivant;
-                tmp = tmp->suivant;
-            }
-
+        // Supprimer la fléchette dans tous les cas si elle a touché
+        if (touche) {
+            if (prec_f == NULL) Lflech->tete = flechette->suivant;
+            else prec_f->suivant = flechette->suivant;
+            Flechette *sup = flechette;
+            flechette = flechette->suivant;
             free(sup);
             Lflech->nb_flechettes--;
-        }
-        else{
-            prec = tmp;
-            tmp = tmp->suivant;
+        } else {
+            prec_f = flechette;
+            flechette = flechette->suivant;
         }
     }
 }
