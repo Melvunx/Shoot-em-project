@@ -13,6 +13,7 @@ Canon* Canon_initialiser(int pos_min, int pos_max, int hauteur_aff){
    C->pos_min=pos_min+3; 
    C->pos_max=pos_max-3;
    C->pas=5;
+   C->pv = 10;
    return C;
 }
 
@@ -57,6 +58,5 @@ void Canon_afficher(Canon *C, Affichage* A){
   strcpy(A->tab[C->xpos-2][C->ypos+C->largeur/2+1],"\33[44m ");
 
 }
-
 
 
