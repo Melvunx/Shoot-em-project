@@ -1,5 +1,4 @@
-# Shoot-em-mini-project
-### Auteurs: Augustine Melvin, RATEFINJANAHARY Rojo Mitia 
+Shoot-em-mini-project
 
 # Nom du premier jeu: Tir aux canards
 
@@ -26,3 +25,7 @@ Le principe est le même que le premier jeu avec des niveaux prédéfini make ru
 
 ## Difficultés rencontrées
 On a eu des problèmes pour les hitbox des tourelles qu'on a pas pu régler. Certaines tourelles peuvent apparaître au bord de l'affichage mais ce n'est pas trop génant.
+
+
+
+### Auteurs: Augustine Melvin, RATEFINJANAHARY Rojo Mitia 
