@@ -17,6 +17,7 @@ void Affichage_desallouer(Affichage **A);
 void Affichage_cadre(Affichage *A);                /* Place un cadre autour de l'Affichage */
 void Affichage_vider(Affichage *A);                /* Remplit l'Affichage de case noire */
 void Affichage_dessiner(Affichage *A);             /* Affiche le tableau à l'écran */
+void afficher_barre_vie(Affichage *A, int ligne, int col, int pv, int pv_max, char *couleur); /* Affiche les points de vie des canards et des tourelles à l'écran */
 
 
 #endif
